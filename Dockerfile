@@ -27,6 +27,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/assets ./assets
 COPY --from=builder /app/mongo-func.js ./mongo-func.js
+COPY --from=builder /app/migrate.js ./migrate.js
 COPY --from=builder /app/rollback.js ./rollback.js
 
 ENV PORT=8080
