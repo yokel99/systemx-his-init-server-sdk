@@ -16,9 +16,9 @@ function mongoImport(from, fileName) {
 
 		cmd = `mongoimport --uri="${uriWithDb}" --collection=${from} --mode=upsert --type=json --file=${fullPath} --jsonArray`;
 	} else {
-		// ✅ สำหรับ Local: ใช้ --host แบบเดิมที่คุณคุ้นเคย
-		let urldb = mongodbUrl.replace('mongodb://', '');
-		cmd = `mongoimport --host=${urldb} --username=${process.env.MONGODB_USERNAME} --password=${process.env.MONGODB_PASSWORD} --authenticationDatabase admin --db=${process.env.MONGODB_NAME} --collection=${from} --mode=upsert --type=json --file=${fullPath} --jsonArray`;
+		// ✅ สำหรับ Local: ใช้ --uri เพื่อหลีกเลี่ยงความขัดแย้งระหว่าง --host กับ credentials ใน URL
+		const uriWithDb = `${mongodbUrl}/${process.env.MONGODB_NAME}`;
+		cmd = `mongoimport --uri="${uriWithDb}" --authenticationDatabase admin --collection=${from} --mode=upsert --type=json --file=${fullPath} --jsonArray`;
 	}
 	// const cmd = `mongoimport --host=${urldb} --username=${process.env.MONGODB_USERNAME} --password=${process.env.MONGODB_PASSWORD} --authenticationDatabase admin --db=${process.env.MONGODB_NAME} --collection=${from} --mode=upsert --type=json --file=${fullPath} --jsonArray`;
 	console.log('⏳ Executing:', urldb, fullPath);
