@@ -17,7 +17,7 @@ services:
     build: .
     container_name: init-server-sdk
     ports:
-      - "8080:8080"
+      - "9991:8080"
     env_file:
       - .env
     volumes:
