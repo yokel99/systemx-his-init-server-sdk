@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mongo:
     image: mongo:8.0
-    container_name: init-mongo
+    container_name: his-mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: 1234
@@ -15,7 +15,7 @@ services:
 
   app:
     build: .
-    container_name: init-server-sdk
+    container_name: his-sdk
     ports:
       - "9991:8080"
     env_file:
