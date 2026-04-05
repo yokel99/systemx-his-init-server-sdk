@@ -1,38 +1,39 @@
 # Stage 1: Build
-FROM node:25-slim AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
 
 # Stage 2: Production
-FROM node:25-slim
+FROM node:22-alpine
 WORKDIR /app
 
-# ติดตั้งเครื่องมือ mongoimport/mongoexport สำหรับรันในโค้ด
-RUN apt-get update && apt-get install -y wget gnupg \
-    && wget -qO- https://www.mongodb.org/static/pgp/server-8.0.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/mongodb-server-8.0.gpg \
-    && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/8.0 main" | tee /etc/apt/sources.list.d/mongodb-org-8.0.list \
-    && apt-get update && apt-get install -y mongodb-database-tools \
-    && rm -rf /var/lib/apt/lists/*
+# อัปเดต security patches ของ system packages
+RUN apk upgrade --no-cache
 
-# ติดตั้งเฉพาะ production dependencies (เผื่อมี native modules ที่ bundle ไม่ได้)
+# ติดตั้งเฉพาะ production dependencies
 COPY package*.json ./
 RUN npm install --omit=dev
 
 # คัดลอกโฟลเดอร์ dist ทั้งหมดมาไว้ที่ ./dist
 COPY --from=builder /app/dist ./dist
 
-# คัดลอกโฟลเดอร์ที่จำเป็นอื่นๆ มาไว้ที่ Root
+# คัดลอกโฟลเดอร์และไฟล์ที่จำเป็นอื่นๆ มาไว้ที่ Root
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/assets ./assets
-COPY --from=builder /app/mongo-func.js ./mongo-func.js
-COPY --from=builder /app/rollback.js ./rollback.js
+COPY --from=builder /app/mongo-func.js ./
+COPY --from=builder /app/migrate.js ./
+COPY --from=builder /app/rollback.js ./
 
-ENV PORT=8080
+# ใช้ non-root user เพื่อความปลอดภัย
+RUN addgroup -S appuser && adduser -S appuser -G appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+ENV PORT=3005
 ENV NODE_ENV=production
-EXPOSE 8080
+EXPOSE 3005
 
-# รันไฟล์ที่ bundle แล้วโดยตรง ไม่ต้องผ่าน npm
-CMD ["node", "dist/server.js"]
-# CMD npm run migrate && node dist/server.js
+# รัน migration ก่อน แล้วจึงเริ่ม server
+CMD ["sh", "-c", "node migrate.js && node dist/server.js"]
