@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: bkkcs-api-server
+    container_name: systemx-his-bkkcs-api-server
     restart: unless-stopped
     ports:
       - "${PORT:-3005}:3005"
@@ -13,3 +13,12 @@ services:
       - .env
     environment:
       - NODE_ENV=production
+    networks:
+      - mongo_mongo_net
+      - systemx_his_bkkcs
+
+networks:
+  mongo_mongo_net:
+    external: true
+  systemx_his_bkkcs:
+    external: true
